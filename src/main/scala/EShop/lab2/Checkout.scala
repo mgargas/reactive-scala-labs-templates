@@ -10,40 +10,34 @@ import scala.language.postfixOps
 
 object Checkout {
 
-  def props(cart: ActorRef) = Props(new Checkout())
-
   sealed trait Data
-
-  sealed trait Command
-
-  sealed trait Event
-
+  case object Uninitialized                               extends Data
   case class SelectingDeliveryStarted(timer: Cancellable) extends Data
-
   case class ProcessingPaymentStarted(timer: Cancellable) extends Data
 
+  sealed trait Command
+  case object StartCheckout                       extends Command
   case class SelectDeliveryMethod(method: String) extends Command
+  case object CancelCheckout                      extends Command
+  case object ExpireCheckout                      extends Command
+  case class SelectPayment(payment: String)       extends Command
+  case object ExpirePayment                       extends Command
+  case object ReceivePayment                      extends Command
 
-  case class SelectPayment(payment: String) extends Command
-
+  sealed trait Event
+  case object CheckOutClosed                   extends Event
   case class PaymentStarted(payment: ActorRef) extends Event
 
-  case object Uninitialized extends Data
-
-  case object StartCheckout extends Command
-
-  case object CancelCheckout extends Command
-
-  case object ExpireCheckout extends Command
-
-  case object ExpirePayment extends Command
-
-  case object ReceivePayment extends Command
-
-  case object CheckOutClosed extends Event
+  def props(cart: ActorRef) = Props(new Checkout(cart))
 }
 
-class Checkout extends Actor {
+class Checkout(
+  cartActor: ActorRef
+) extends Actor {
+
+  private val scheduler = context.system.scheduler
+  private val log       = Logging(context.system, this)
+
   val checkoutTimerDuration = 1 seconds
   val paymentTimerDuration  = 1 seconds
   private val scheduler     = context.system.scheduler

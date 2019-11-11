@@ -9,15 +9,15 @@ import scala.language.postfixOps
 
 object CheckoutFSM {
 
-  def props(cartActor: ActorRef) = Props(new CheckoutFSM)
-
   object Status extends Enumeration {
     type Status = Value
     val NotStarted, SelectingDelivery, SelectingPaymentMethod, Cancelled, ProcessingPayment, Closed = Value
   }
+
+  def props(cartActor: ActorRef) = Props(new CheckoutFSM(cartActor))
 }
 
-class CheckoutFSM extends LoggingFSM[Status.Value, Data] {
+class CheckoutFSM(cartActor: ActorRef) extends LoggingFSM[Status.Value, Data] {
   import EShop.lab2.CheckoutFSM.Status._
   import context.dispatcher
 

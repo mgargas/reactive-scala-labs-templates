@@ -10,25 +10,19 @@ import scala.language.postfixOps
 
 object CartActor {
 
-  def props = Props(new CartActor())
-
   sealed trait Command
+  case class AddItem(item: Any)    extends Command
+  case class RemoveItem(item: Any) extends Command
+  case object ExpireCart           extends Command
+  case object StartCheckout        extends Command
+  case object CancelCheckout       extends Command
+  case object CloseCheckout        extends Command
+  case object GetItems             extends Command // command made to make testing easier
 
   sealed trait Event
-
-  case class AddItem(item: Any) extends Command
-
-  case class RemoveItem(item: Any) extends Command
-
   case class CheckoutStarted(checkoutRef: ActorRef) extends Event
 
-  case object ExpireCart extends Command
-
-  case object StartCheckout extends Command
-
-  case object CancelCheckout extends Command
-
-  case object CloseCheckout extends Command
+  def props() = Props(new CartActor())
 }
 
 class CartActor extends Actor {
