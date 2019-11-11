@@ -44,13 +44,18 @@ class CartActor extends Actor {
       timerCancellationAndAction(timer)(context become empty)
     case RemoveItem(item) if cart.contains(item) =>
       timerCancellationAndAction(timer)(context become nonEmpty(cart.removeItem(item), scheduleTimer))
-    case StartCheckout => timerCancellationAndAction(timer)(context become inCheckout(cart))
-    case ExpireCart    => context become empty
+    case StartCheckout =>
+      val checkoutActor = context.actorOf(Checkout.props(self))
+      checkoutActor ! Checkout.StartCheckout
+      sender() ! CheckoutStarted(checkoutActor)
+      timerCancellationAndAction(timer)(context become inCheckout(cart))
+    case ExpireCart => context become empty
   }
 
   def inCheckout(cart: Cart): Receive = LoggingReceive.withLabel("[State: inCheckout]") {
-    case CancelCheckout => context become nonEmpty(cart, scheduleTimer)
-    case CloseCheckout  => context become empty
+    case CancelCheckout          => context become nonEmpty(cart, scheduleTimer)
+    case CloseCheckout           => context become empty
+    case Checkout.CheckOutClosed => context become empty
   }
 
   private def scheduleTimer: Cancellable = context.system.scheduler.scheduleOnce(cartTimerDuration, self, ExpireCart)
