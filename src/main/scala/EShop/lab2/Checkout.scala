@@ -40,8 +40,6 @@ class Checkout(
 
   val checkoutTimerDuration = 1 seconds
   val paymentTimerDuration  = 1 seconds
-  private val scheduler     = context.system.scheduler
-  private val log           = Logging(context.system, this)
 
   implicit val ec: ExecutionContextExecutor = context.dispatcher
 
