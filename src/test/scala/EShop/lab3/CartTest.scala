@@ -1,7 +1,7 @@
 package EShop.lab3
 
 import EShop.lab2.CartActor
-import akka.actor.ActorSystem
+import akka.actor.{ActorRef, ActorSystem}
 import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import akka.util.Timeout
@@ -42,9 +42,12 @@ class CartTest
     (actorRef ? CartActor.GetItems).mapTo[Seq[Any]].futureValue shouldBe Seq.empty
   }
 
-  it should "start checkout" in new CartActorTest {
-    actorRef ! CartActor.AddItem(item)
-    (actorRef ? CartActor.StartCheckout).mapTo[CartActor.CheckoutStarted].futureValue shouldBe CartActor
-      .CheckoutStarted(_: TestActorRef[CartActor])
+  //asynchronous
+  it should "start checkout" in {
+    val item = "Machupichu gold"
+    val cartActor = system.actorOf(CartActor.props())
+    cartActor ! CartActor.AddItem(item)
+    cartActor ! CartActor.StartCheckout
+    expectMsg(_: CartActor.CheckoutStarted)
   }
 }
