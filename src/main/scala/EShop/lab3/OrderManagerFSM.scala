@@ -20,7 +20,7 @@ class OrderManagerFSM extends FSM[State, Data] {
     case Event(Buy, CartData(cartRef)) =>
       cartRef ! CartActor.StartCheckout
       stay() using CartDataWithSender(cartRef, sender())
-    case Event(CartActor.CheckoutStarted(checkoutRef), CartDataWithSender(_, sender)) =>
+    case Event(CartActor.CheckoutStarted(checkoutRef, _), CartDataWithSender(_, sender)) =>
       sender ! Done
       goto(InCheckout) using InCheckoutData(checkoutRef)
   }
