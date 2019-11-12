@@ -36,7 +36,11 @@ class CartFSM extends LoggingFSM[Status.Value, Cart] {
     case Event(AddItem(item), cart: Cart)                                             => stay using cart.addItem(item)
     case Event(RemoveItem(item), cart: Cart) if cart.contains(item) && cart.size == 1 => goto(Empty) using Cart.empty
     case Event(RemoveItem(item), cart: Cart) if cart.contains(item)                   => stay using cart.removeItem(item)
-    case Event(StartCheckout, cart: Cart)                                             => goto(InCheckout) using cart
+    case Event(StartCheckout, cart: Cart)                                             =>
+      val checkoutRef = context.actorOf(CheckoutFSM.props(self))
+      checkoutRef ! Checkout.StartCheckout
+      sender() ! CheckoutStarted(checkoutRef)
+      goto(InCheckout) using cart
     case Event(StateTimeout, _)                                                       => goto(Empty) using Cart.empty
 
   }

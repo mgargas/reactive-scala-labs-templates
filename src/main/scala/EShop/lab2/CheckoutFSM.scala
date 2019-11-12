@@ -2,6 +2,7 @@ package EShop.lab2
 
 import EShop.lab2.Checkout._
 import EShop.lab2.CheckoutFSM.Status
+import EShop.lab3.PaymentFSM
 import akka.actor.{ActorRef, Cancellable, LoggingFSM, Props}
 
 import scala.concurrent.duration._
@@ -47,7 +48,9 @@ class CheckoutFSM(cartActor: ActorRef) extends LoggingFSM[Status.Value, Data] {
   when(SelectingPaymentMethod) {
     case Event(CancelCheckout, SelectingDeliveryStarted(timer)) => timerCancellationAndAction(timer)(goto(Cancelled))
     case Event(ExpireCheckout, SelectingDeliveryStarted(_))     => goto(Cancelled)
-    case Event(SelectPayment(_), SelectingDeliveryStarted(timer)) =>
+    case Event(SelectPayment(payment), SelectingDeliveryStarted(timer)) =>
+      val paymentRef = context.actorOf(PaymentFSM.props(payment, sender(), self))
+      sender() ! PaymentStarted(paymentRef)
       timerCancellationAndAction(timer)(goto(ProcessingPayment) using ProcessingPaymentStarted(paymentTimer))
   }
 
