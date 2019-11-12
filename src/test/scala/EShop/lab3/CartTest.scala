@@ -1,7 +1,7 @@
 package EShop.lab3
 
 import EShop.lab2.CartActor
-import akka.actor.{ActorRef, ActorSystem}
+import akka.actor.ActorSystem
 import akka.pattern.ask
 import akka.testkit.{ImplicitSender, TestActorRef, TestKit}
 import akka.util.Timeout
@@ -44,7 +44,7 @@ class CartTest
 
   //asynchronous
   it should "start checkout" in {
-    val item = "Machupichu gold"
+    val item      = "Machupichu gold"
     val cartActor = system.actorOf(CartActor.props())
     cartActor ! CartActor.AddItem(item)
     cartActor ! CartActor.StartCheckout
