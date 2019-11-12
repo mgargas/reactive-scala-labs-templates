@@ -10,12 +10,12 @@ import scala.language.postfixOps
 
 object CheckoutFSM {
 
+  def props(cartActor: ActorRef) = Props(new CheckoutFSM(cartActor))
+
   object Status extends Enumeration {
     type Status = Value
     val NotStarted, SelectingDelivery, SelectingPaymentMethod, Cancelled, ProcessingPayment, Closed = Value
   }
-
-  def props(cartActor: ActorRef) = Props(new CheckoutFSM(cartActor))
 }
 
 class CheckoutFSM(cartActor: ActorRef) extends LoggingFSM[Status.Value, Data] {
@@ -57,7 +57,9 @@ class CheckoutFSM(cartActor: ActorRef) extends LoggingFSM[Status.Value, Data] {
   when(ProcessingPayment) {
     case Event(CancelCheckout, ProcessingPaymentStarted(timer)) => timerCancellationAndAction(timer)(goto(Cancelled))
     case Event(ExpirePayment, _)                                => goto(Cancelled)
-    case Event(ReceivePayment, ProcessingPaymentStarted(timer)) => timerCancellationAndAction(timer)(goto(Closed))
+    case Event(ReceivePayment, ProcessingPaymentStarted(timer)) =>
+      cartActor ! CheckOutClosed
+      timerCancellationAndAction(timer)(goto(Closed))
   }
 
   when(Cancelled) {
