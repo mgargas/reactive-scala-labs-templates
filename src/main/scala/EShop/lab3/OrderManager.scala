@@ -51,12 +51,9 @@ class OrderManager extends Actor {
       context become inCheckout(cartActor, sender())
   }
 
-  def inCheckout(cartActorRef: ActorRef, senderRef: ActorRef): Receive =
-    LoggingReceive.withLabel("[State: inCheckout1]") {
-      case CartActor.CheckoutStarted(checkoutRef) =>
-        senderRef ! Done
-        context become inCheckout(checkoutRef)
-    }
+  def inCheckout(cartActorRef: ActorRef, senderRef: ActorRef): Receive = {
+    case CartActor.CheckoutStarted(checkoutRef, cart) => ???
+  }
 
   def inCheckout(checkoutActorRef: ActorRef): Receive = LoggingReceive.withLabel("[State: inCheckout2]") {
     case SelectDeliveryAndPaymentMethod(delivery, payment) =>
