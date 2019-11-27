@@ -13,13 +13,16 @@ import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
-class ProductCatalogHttpServer(system: ActorSystem, productCatalogSystem: ActorSystem) extends HttpApp with SprayJsonSupport with JsonSupport {
+class ProductCatalogHttpServer(system: ActorSystem, productCatalogSystem: ActorSystem)
+  extends HttpApp
+  with SprayJsonSupport
+  with JsonSupport {
 
-  implicit val getItmesFormat = jsonFormat2(ProductCatalog.GetItems)
-  implicit val itemFormat     = jsonFormat5(ProductCatalog.Item)
-  implicit val itemsFormat    = jsonFormat1(ProductCatalog.Items)
+  implicit val getItmesFormat   = jsonFormat2(ProductCatalog.GetItems)
+  implicit val itemFormat       = jsonFormat5(ProductCatalog.Item)
+  implicit val itemsFormat      = jsonFormat1(ProductCatalog.Items)
   implicit val timeout: Timeout = 5.seconds
-  private val workers = productCatalogSystem.actorOf(RoundRobinPool(9).props(ProductCatalog.props(new SearchService())))
+  private val workers           = productCatalogSystem.actorOf(RoundRobinPool(9).props(ProductCatalog.props(new SearchService())))
 
   override protected def routes: Route = pathPrefix("query") {
     post {

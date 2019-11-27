@@ -24,18 +24,18 @@ class PersistentCartActor(
   private def scheduleTimer: Cancellable =
     context.system.scheduler.scheduleOnce(cartTimerDuration, self, ExpireCart)(context.system.dispatcher)
 
-
   override def receiveCommand: Receive = empty
 
   private def updateState(event: Event, timer: Option[Cancellable] = None): Unit = {
     timer.foreach(_.cancel())
     event match {
-      case CartExpired | CheckoutClosed       => context become empty
-      case CheckoutCancelled(cart)            => context become nonEmpty(cart, scheduleTimer)
-      case ItemAdded(item, cart)              => context become nonEmpty(cart.addItem(item), scheduleTimer)
-      case CartEmptied                        => context become empty
-      case ItemRemoved(item, cart) if cart.contains(item) && cart.size == 1            => context become empty
-      case ItemRemoved(item, cart) if cart.contains(item) => context become nonEmpty(cart.removeItem(item), scheduleTimer)
+      case CartExpired | CheckoutClosed                                     => context become empty
+      case CheckoutCancelled(cart)                                          => context become nonEmpty(cart, scheduleTimer)
+      case ItemAdded(item, cart)                                            => context become nonEmpty(cart.addItem(item), scheduleTimer)
+      case CartEmptied                                                      => context become empty
+      case ItemRemoved(item, cart) if cart.contains(item) && cart.size == 1 => context become empty
+      case ItemRemoved(item, cart) if cart.contains(item) =>
+        context become nonEmpty(cart.removeItem(item), scheduleTimer)
       case CheckoutStarted(_, cart) => context become inCheckout(cart)
     }
   }
@@ -55,7 +55,7 @@ class PersistentCartActor(
       persist(ItemRemoved(item, cart))(event => updateState(event, Some(timer)))
     case StartCheckout =>
       val persistentCheckoutActor = context.actorOf(PersistentCheckout.props(self, "persistent-checkout"), "checkout")
-      val event = CheckoutStarted(persistentCheckoutActor, cart)
+      val event                   = CheckoutStarted(persistentCheckoutActor, cart)
       persist(event)(_ => {
         persistentCheckoutActor ! Checkout.StartCheckout
         sender() ! event
