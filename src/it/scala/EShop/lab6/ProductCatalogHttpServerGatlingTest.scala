@@ -6,7 +6,8 @@ import scala.concurrent.duration._
 import scala.util.Random
 class ProductCatalogHttpServerGatlingTest extends Simulation {
   val httpProtocol = http
-    .baseUrls("http://localhost:8090")
+//    .baseUrls("http://localhost:8090")
+    .baseUrls("http://localhost:9001", "http://localhost:9001", "http://localhost:9001")
     .acceptHeader("application/json")
     .userAgentHeader("Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0")
 
@@ -35,6 +36,6 @@ class ProductCatalogHttpServerGatlingTest extends Simulation {
     .exec(request)
 
   setUp(
-    scn.inject(rampUsers(20000).during(1 minutes))
+    scn.inject(rampUsers(100).during(10 seconds))
   ).protocols(httpProtocol)
 }
